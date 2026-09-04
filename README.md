@@ -1,162 +1,67 @@
-# Driver Fatigue & Distraction Monitor
+# Driver Safety Monitor
 
-A local computer-vision prototype that uses a webcam to watch for visual signs of driver fatigue and distraction. It displays the camera feed, face landmarks, detection state, and risk score in real time, then plays an audio warning when configured thresholds are reached.
-
-![Dashboard preview](assets/monitor-dashboard.svg)
+A browser-based driver fatigue and distraction monitor. Camera frames are processed locally in the browser with MediaPipe Tasks; they are not uploaded to a backend.
 
 > This project is for education and experimentation. It is not a certified automotive safety system and must not be used as the sole safety mechanism in a vehicle.
 
-## What It Detects
+## Features
 
-- Face presence and facial landmarks
-- Prolonged eye closure and drowsiness
-- Yawning
-- Basic face direction and distraction signals
-- A combined risk score
-- Audio warnings through `assets/alarm.wav`
-
-![Detection flow](assets/detection-flow.svg)
-
-## Requirements
-
-- Python 3.9 or newer
-- A working webcam
-- A desktop environment with an available audio output
-- MediaPipe's face landmarker model at `assets/face_landmarker.task`
-
-The application currently targets desktop Python environments. Camera and audio permissions may need to be granted by the operating system.
-
-## Installation
-
-### Linux and macOS
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### Windows
-
-```powershell
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-The included setup script can be used on Linux or macOS:
-
-```bash
-chmod +x setup.sh
-./setup.sh
-```
+- Face landmarks and face presence detection
+- Prolonged eye closure and drowsiness detection
+- Yawning detection
+- Basic face-direction distraction signals
+- Combined risk score and warning state
+- Optional browser warning tone
 
 ## Run locally
 
-Activate the virtual environment and start the monitor:
+Serve the repository with any static web server. For example:
 
 ```bash
-streamlit run app.py
+python3 -m http.server 8000
 ```
 
-Open the local URL shown by Streamlit, allow camera access, and press **START** in the video panel.
+Open [http://localhost:8000](http://localhost:8000), press **Start camera**, and allow camera access. A static server is required because browsers restrict camera access from `file://` pages.
 
-## Deploy
+## Deploy on Vercel
 
-This is a Streamlit web app, not a desktop OpenCV window. For Render or another process-based host, use:
+1. Import this repository into Vercel.
+2. Use the **Other** framework preset.
+3. Leave the build command empty.
+4. Deploy from the repository root.
+5. Open the HTTPS deployment URL, allow camera access, and press **Start camera**.
 
-- **Build command:** `pip install -r requirements.txt`
-- **Start command:** `streamlit run app.py --server.address=0.0.0.0 --server.port=$PORT`
-- **Python:** 3.11.9 (recorded in `runtime.txt` and `.python-version`)
+`vercel.json` serves the static app. No Python runtime, build step, database, or server-side camera processing is required.
 
-The included `Procfile` contains the same start command. The deployed URL must use HTTPS because browser camera access and WebRTC are blocked on insecure public URLs. After opening the URL, allow camera permissions and press **START**.
-
-Streamlit Community Cloud can deploy `app.py` directly from this repository. In the app's **Manage app** settings, select Python 3.11 if it does not read the runtime files automatically, then use **Reboot app** to rebuild the environment.
-
-### Render
-
-The repository includes `render.yaml` for a one-click Render deployment. In
-Render, choose **New +** -> **Blueprint**, connect this repository, and apply
-the detected service. It installs dependencies with Python 3.11 and starts
-Streamlit on Render's assigned port. Open the resulting HTTPS URL and allow
-camera access in the browser.
-
-### Vercel
-
-Vercel cannot run the Streamlit/WebRTC server, so the repository also includes a
-static browser implementation. It runs face landmark detection locally with
-MediaPipe Tasks and does not upload camera frames to a server.
-
-1. Import this GitHub repository into Vercel.
-2. Leave the framework preset as **Other** and leave the build command empty.
-3. Deploy from the repository root.
-4. Open the deployment URL over HTTPS, allow camera access, and press **Start camera**.
-
-The Vercel entry point is `index.html`; `app.py` remains the Streamlit entry
-point for Render and Streamlit Community Cloud.
-
-## Project Layout
+## Project layout
 
 ```text
 driver-fatigue-monitor/
-├── app.py                         # Streamlit application and dashboard
-├── requirements.txt               # Python dependencies
-├── setup.sh                       # Environment setup helper
-├── assets/
-│   ├── alarm.wav                  # Warning sound
-│   ├── detection-flow.svg         # README workflow illustration
-│   ├── face_landmarker.task       # MediaPipe model
-│   └── monitor-dashboard.svg      # README dashboard illustration
-├── detector/
-│   ├── distraction_detector.py    # Face direction checks
-│   ├── face_detector.py           # Face landmark extraction
-│   └── fatigue_detector.py        # Eye and mouth signal checks
-├── tests/
-│   └── test_warning_system.py     # Warning behavior tests
-└── utils/
-    ├── alert.py                   # Audio alert handling
-    └── constants.py               # Shared thresholds and settings
+├── index.html          # App markup
+├── app.js              # Camera capture and MediaPipe analysis
+├── styles.css          # Responsive interface
+├── vercel.json         # Vercel static hosting configuration
+└── assets/
+    ├── detection-flow.svg
+    └── monitor-dashboard.svg
 ```
-
-## How It Works
-
-1. OpenCV reads frames from the default webcam.
-2. MediaPipe extracts face landmarks using the bundled task model.
-3. Detector modules measure eye closure, mouth opening, and face direction.
-4. The application combines those signals into a risk score.
-5. The alert utility plays the warning sound when the risk state requires it.
-
-The thresholds are centralized in `utils/constants.py`, so experiments can be made without changing the main application loop. Lighting, camera position, glasses, facial pose, and camera quality can affect results.
-
-## Tests
-
-Install the dependencies, then run:
-
-```bash
-python -m pytest
-```
-
-The tests cover the warning-system behavior. Hardware-dependent camera and audio behavior should also be checked on the target machine.
 
 ## Troubleshooting
 
-**The camera does not open**
+**The camera does not start**
 
-- Confirm that no other application is using the webcam.
-- Check operating-system camera permissions.
-- Try a different camera index in `app.py` if the default device is not index `0`.
+- Use the HTTPS deployment URL or `localhost`.
+- Allow camera access when the browser asks.
+- Check that another application is not using the camera.
 
-**The model cannot be loaded**
+**The model does not load**
 
-- Confirm that `assets/face_landmarker.task` exists and is readable.
-- Run the command from the project root so relative asset paths resolve correctly.
+- Check the browser console and network connection.
+- MediaPipe Tasks and its model are loaded from public CDNs when the app starts.
 
-**No warning sound is heard**
+**Warnings are silent**
 
-- Check the system volume and selected audio output.
-- Confirm that `assets/alarm.wav` exists.
-- Verify that the desktop audio backend required by the installed Pygame version is available.
+- Enable **Enable warning sound**.
+- Interact with the page before starting the camera so the browser permits audio playback.
 
-## License and Safety
-
-No production safety, medical, legal, or fitness-for-purpose claims are made by this prototype. Do not drive while testing or adjusting the application. Add an appropriate license before redistributing the project.
+Lighting, camera position, glasses, facial pose, and camera quality can affect accuracy. Do not drive while testing or adjusting the application.
