@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#17242d" />
+    <title>Driver Safety Monitor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">LIVE VISION / LOCAL PROCESSING</p>
+        <h1>Driver Safety Monitor</h1>
+        <p class="lede">Visual fatigue and attention signals processed directly in your browser.</p>
+      </header>
+
+      <section class="workspace" aria-label="Driver monitor">
+        <div class="camera-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">CAMERA FEED</p><h2>Live view</h2></div>
+            <span id="connectionState" class="state-pill">Offline</span>
+          </div>
+          <div class="video-wrap">
+            <video id="camera" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div id="cameraMessage" class="camera-message">Press start and allow camera access.</div>
+          </div>
+          <div class="camera-actions">
+            <button id="startButton" class="primary-button" type="button">Start camera</button>
+            <button id="stopButton" class="secondary-button" type="button" disabled>Stop</button>
+          </div>
+        </div>
+
+        <aside class="signals-panel">
+          <div class="panel-heading"><div><p class="eyebrow">LIVE SIGNALS</p><h2>Current state</h2></div></div>
+          <div class="metrics-grid">
+            <div class="metric"><span>RISK SCORE</span><strong id="score">0<small> / 7</small></strong></div>
+            <div class="metric"><span>FACE</span><strong id="face">WAITING</strong></div>
+            <div class="metric"><span>EYES</span><strong id="eyes">WAITING</strong></div>
+            <div class="metric"><span>ATTENTION</span><strong id="attention">WAITING</strong></div>
+          </div>
+          <p id="status" class="status-line"><span class="status-dot"></span>Camera is off</p>
+          <label class="sound-toggle"><input id="soundToggle" type="checkbox" checked /> Enable warning sound</label>
+          <p class="note">Allow camera access, keep your face centered, and use the monitor only as an experimental aid.</p>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

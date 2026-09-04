@@ -73,6 +73,20 @@ The included `Procfile` contains the same start command. The deployed URL must u
 
 Streamlit Community Cloud can deploy `app.py` directly from this repository. In the app's **Manage app** settings, select Python 3.11 if it does not read the runtime files automatically, then use **Reboot app** to rebuild the environment.
 
+### Vercel
+
+Vercel cannot run the Streamlit/WebRTC server, so the repository also includes a
+static browser implementation. It runs face landmark detection locally with
+MediaPipe Tasks and does not upload camera frames to a server.
+
+1. Import this GitHub repository into Vercel.
+2. Leave the framework preset as **Other** and leave the build command empty.
+3. Deploy from the repository root.
+4. Open the deployment URL over HTTPS, allow camera access, and press **Start camera**.
+
+The Vercel entry point is `index.html`; `app.py` remains the Streamlit entry
+point for Render and Streamlit Community Cloud.
+
 ## Project Layout
 
 ```text
