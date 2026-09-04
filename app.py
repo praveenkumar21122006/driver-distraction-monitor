@@ -12,6 +12,20 @@ from detector.fatigue_detector import FatigueDetector
 st.set_page_config(page_title="Driver Safety Monitor", page_icon="D", layout="wide", initial_sidebar_state="expanded")
 
 
+def draw_status(frame, fatigue, distraction, score):
+    height, width = frame.shape[:2]
+    warning = fatigue.get("drowsy", False) or fatigue.get("yawning", False) or distraction.get("distracted", False)
+    cv2.rectangle(frame, (0, 0), (width, 96), (15, 27, 35), -1)
+    cv2.putText(frame, "DRIVER SAFETY MONITOR", (24, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (245, 250, 247), 2)
+    cv2.putText(frame, f"EYES: {'CLOSED' if fatigue['eyes_closed'] else 'OPEN'}", (24, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (180, 220, 207), 2)
+    cv2.putText(frame, f"ATTENTION: {distraction['direction']}", (230, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (180, 220, 207), 2)
+    cv2.putText(frame, f"RISK: {score}/7", (width - 165, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (90, 210, 150) if not warning else (80, 100, 255), 2)
+    if warning:
+        cv2.rectangle(frame, (0, height - 66), (width, height), (35, 45, 155), -1)
+        cv2.putText(frame, "WARNING - CHECK DRIVER STATE", (24, height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+    return frame
+
+
 class MonitorProcessor(VideoProcessorBase):
     def __init__(self):
         self.face_detector = FaceDetector()
@@ -54,15 +68,7 @@ class MonitorProcessor(VideoProcessorBase):
             return self.metrics.copy()
 
     def _draw_dashboard(self, image, fatigue, distraction, score, warning):
-        height, width = image.shape[:2]
-        cv2.rectangle(image, (0, 0), (width, 96), (15, 27, 35), -1)
-        cv2.putText(image, "DRIVER SAFETY MONITOR", (24, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (245, 250, 247), 2)
-        cv2.putText(image, f"EYES: {'CLOSED' if fatigue['eyes_closed'] else 'OPEN'}", (24, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (180, 220, 207), 2)
-        cv2.putText(image, f"ATTENTION: {distraction['direction']}", (230, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (180, 220, 207), 2)
-        cv2.putText(image, f"RISK: {score}/7", (width - 165, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (90, 210, 150) if not warning else (80, 100, 255), 2)
-        if warning:
-            cv2.rectangle(image, (0, height - 66), (width, height), (35, 45, 155), -1)
-            cv2.putText(image, "WARNING - CHECK DRIVER STATE", (24, height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        draw_status(image, fatigue, distraction, score)
 
 
 def render_metrics(processor):
