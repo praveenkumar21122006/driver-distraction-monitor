@@ -1,4 +1,5 @@
 import threading
+from pathlib import Path
 
 import cv2
 import streamlit as st
@@ -84,6 +85,18 @@ def render_metrics(processor):
     """, unsafe_allow_html=True)
 
 
+@st.fragment(run_every="1s")
+def render_live_panel(context, sound_enabled):
+    processor = context.video_processor if context and context.video_processor else None
+    render_metrics(processor)
+    metrics = processor.get_metrics() if processor else {"status": "Camera is off"}
+    warning_active = metrics["status"] in {"DROWSINESS DETECTED", "DISTRACTION DETECTED", "YAWNING DETECTED"}
+    if sound_enabled and warning_active:
+        alarm_path = Path(__file__).parent / "assets" / "alarm.wav"
+        st.audio(str(alarm_path), format="audio/wav", autoplay=True, loop=True)
+        st.error("Warning sound active")
+
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
@@ -131,7 +144,8 @@ with left:
     context = webrtc_streamer(key="driver-safety-monitor", mode=WebRtcMode.SENDRECV, video_processor_factory=MonitorProcessor, media_stream_constraints={"video": True, "audio": False}, async_processing=True)
 with right:
     st.markdown("### Live signals")
-    render_metrics(context.video_processor if context and context.video_processor else None)
+    sound_enabled = st.checkbox("Enable browser warning sound", value=True)
+    render_live_panel(context, sound_enabled)
     st.info("Allow camera access in your browser, then press START in the video panel.")
 
 st.markdown("### How to read the monitor")
