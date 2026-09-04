@@ -1,0 +1,18 @@
+venv/
+.env/
+.venv/
+__pycache__/
+*.py[cod]
+*.so
+*.dll
+*.dylib
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Local generated/runtime files
+assets/*.tmp
