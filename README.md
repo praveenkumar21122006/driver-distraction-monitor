@@ -73,6 +73,14 @@ The included `Procfile` contains the same start command. The deployed URL must u
 
 Streamlit Community Cloud can deploy `app.py` directly from this repository. In the app's **Manage app** settings, select Python 3.11 if it does not read the runtime files automatically, then use **Reboot app** to rebuild the environment.
 
+### Render
+
+The repository includes `render.yaml` for a one-click Render deployment. In
+Render, choose **New +** -> **Blueprint**, connect this repository, and apply
+the detected service. It installs dependencies with Python 3.11 and starts
+Streamlit on Render's assigned port. Open the resulting HTTPS URL and allow
+camera access in the browser.
+
 ### Vercel
 
 Vercel cannot run the Streamlit/WebRTC server, so the repository also includes a
