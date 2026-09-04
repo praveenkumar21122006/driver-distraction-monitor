@@ -37,13 +37,10 @@ Open [http://localhost:8000](http://localhost:8000), press **Start camera**, and
 
 ```text
 driver-fatigue-monitor/
-├── index.html          # App markup
-├── app.js              # Camera capture and MediaPipe analysis
-├── styles.css          # Responsive interface
-├── vercel.json         # Vercel static hosting configuration
-└── assets/
-    ├── detection-flow.svg
-    └── monitor-dashboard.svg
+├── index.html     # App markup
+├── app.js         # Camera capture and MediaPipe analysis
+├── styles.css     # Responsive interface
+└── vercel.json    # Vercel static hosting configuration
 ```
 
 ## Troubleshooting

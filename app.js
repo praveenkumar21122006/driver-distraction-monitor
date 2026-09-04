@@ -96,7 +96,14 @@ function render() {
   if (video.currentTime !== lastVideoTime) {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const result = landmarker.detectForVideo(video, performance.now());
+    let result;
+    try {
+      result = landmarker.detectForVideo(video, performance.now());
+    } catch (error) {
+      console.error(error);
+      stop("Face analysis stopped unexpectedly.");
+      return;
+    }
     if (result.faceLandmarks.length) {
       drawLandmarks(result.faceLandmarks[0]);
       analyze(result.faceLandmarks[0], performance.now());
@@ -114,9 +121,19 @@ async function start() {
   startButton.disabled = true;
   cameraMessage.textContent = "Loading face model...";
   try {
-    audioContext = new AudioContext();
+    closedSince = null;
+    yawnFrames = 0;
+    distractionFrames = 0;
+    analyze.lastWarning = false;
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const vision = await FilesetResolver.forVisionTasks(WASM_URL);
-    landmarker = await FaceLandmarker.createFromOptions(vision, { baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" }, runningMode: "VIDEO", numFaces: 1, minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+    const options = { baseOptions: { modelAssetPath: MODEL_URL }, runningMode: "VIDEO", numFaces: 1, minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 };
+    try {
+      landmarker = await FaceLandmarker.createFromOptions(vision, { ...options, baseOptions: { ...options.baseOptions, delegate: "GPU" } });
+    } catch {
+      landmarker = await FaceLandmarker.createFromOptions(vision, options);
+    }
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera access is unavailable in this browser.");
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
     video.srcObject = stream;
     await video.play();
@@ -128,21 +145,25 @@ async function start() {
   } catch (error) {
     console.error(error);
     cameraMessage.hidden = false;
-    cameraMessage.textContent = error.name === "NotAllowedError" ? "Camera permission was denied." : "Could not start the camera or face model.";
+    cameraMessage.textContent = error.name === "NotAllowedError" ? "Camera permission was denied." : error.message || "Could not start the camera or face model.";
     setMetrics({ status: "Camera unavailable" });
     startButton.disabled = false;
   }
 }
 
-function stop() {
+function stop(message = "Press start and allow camera access.") {
   cancelAnimationFrame(animationFrame);
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
+  closedSince = null;
+  yawnFrames = 0;
+  distractionFrames = 0;
+  analyze.lastWarning = false;
   connectionState.textContent = "Offline";
   connectionState.classList.remove("live");
   cameraMessage.hidden = false;
-  cameraMessage.textContent = "Press start and allow camera access.";
+  cameraMessage.textContent = message;
   startButton.disabled = false;
   stopButton.disabled = true;
   setMetrics({ status: "Camera is off" });
