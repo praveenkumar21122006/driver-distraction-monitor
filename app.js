@@ -30,6 +30,8 @@ let closedSince = null;
 let yawnFrames = 0;
 let distractionFrames = 0;
 let audioContext;
+let warningInterval;
+let warningActive = false;
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const ratio = (landmarks, points) => {
@@ -60,6 +62,16 @@ function beep() {
   oscillator.stop(audioContext.currentTime + 0.24);
 }
 
+function setWarningSound(active) {
+  warningActive = active;
+  clearInterval(warningInterval);
+  warningInterval = undefined;
+  if (active && soundToggle.checked && audioContext) {
+    beep();
+    warningInterval = setInterval(beep, 1000);
+  }
+}
+
 function drawLandmarks(landmarks) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "rgba(97, 208, 149, .7)";
@@ -87,7 +99,7 @@ function analyze(landmarks, now) {
   const score = (drowsy ? 3 : 0) + (yawning ? 1 : 0) + (distracted ? 3 : 0);
   const status = drowsy ? "DROWSINESS DETECTED" : distracted ? "DISTRACTION DETECTED" : yawning ? "YAWNING DETECTED" : "NORMAL";
   setMetrics({ score, face: "FOUND", eyes: eyesClosed ? "CLOSED" : "OPEN", attention: direction, status, warning });
-  if (warning && !analyze.lastWarning) beep();
+  if (warning !== analyze.lastWarning) setWarningSound(warning);
   analyze.lastWarning = warning;
 }
 
@@ -126,6 +138,7 @@ async function start() {
     distractionFrames = 0;
     analyze.lastWarning = false;
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    await audioContext.resume();
     const vision = await FilesetResolver.forVisionTasks(WASM_URL);
     const options = { baseOptions: { modelAssetPath: MODEL_URL }, runningMode: "VIDEO", numFaces: 1, minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 };
     try {
@@ -153,6 +166,7 @@ async function start() {
 
 function stop(message = "Press start and allow camera access.") {
   cancelAnimationFrame(animationFrame);
+  setWarningSound(false);
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
@@ -171,3 +185,4 @@ function stop(message = "Press start and allow camera access.") {
 
 startButton.addEventListener("click", start);
 stopButton.addEventListener("click", stop);
+soundToggle.addEventListener("change", () => setWarningSound(warningActive));
