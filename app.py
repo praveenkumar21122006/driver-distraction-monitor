@@ -29,7 +29,12 @@ def draw_status(frame, fatigue, distraction, score):
 
 class MonitorProcessor(VideoProcessorBase):
     def __init__(self):
-        self.face_detector = FaceDetector()
+        self.initialization_error = None
+        try:
+            self.face_detector = FaceDetector()
+        except OSError:
+            self.face_detector = None
+            self.initialization_error = "MediaPipe could not load its native library. Use Python 3.11 and redeploy."
         self.fatigue_detector = FatigueDetector()
         self.distraction_detector = DistractionDetector()
         self.lock = threading.Lock()
@@ -37,6 +42,11 @@ class MonitorProcessor(VideoProcessorBase):
 
     def recv(self, frame):
         image = cv2.flip(frame.to_ndarray(format="bgr24"), 1)
+        if self.initialization_error:
+            self._update_metrics({"face": False, "eyes": "Unavailable", "direction": "Unavailable", "status": self.initialization_error, "score": 0})
+            cv2.putText(image, "MEDIAPIPE UNAVAILABLE", (24, 44), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (80, 100, 255), 2)
+            return frame.from_ndarray(image, format="bgr24")
+
         landmarks = self.face_detector.detect(image)
 
         if landmarks:

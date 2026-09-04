@@ -51,21 +51,33 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-## Run
+## Run locally
 
 Activate the virtual environment and start the monitor:
 
 ```bash
-python app.py
+streamlit run app.py
 ```
 
-The webcam window opens once the camera is available. Press `Q` to stop the monitor and close the window.
+Open the local URL shown by Streamlit, allow camera access, and press **START** in the video panel.
+
+## Deploy
+
+This is a Streamlit web app, not a desktop OpenCV window. For Render or another process-based host, use:
+
+- **Build command:** `pip install -r requirements.txt`
+- **Start command:** `streamlit run app.py --server.address=0.0.0.0 --server.port=$PORT`
+- **Python:** 3.11.9 (recorded in `runtime.txt` and `.python-version`)
+
+The included `Procfile` contains the same start command. The deployed URL must use HTTPS because browser camera access and WebRTC are blocked on insecure public URLs. After opening the URL, allow camera permissions and press **START**.
+
+Streamlit Community Cloud can deploy `app.py` directly from this repository. In the app's **Manage app** settings, select Python 3.11 if it does not read the runtime files automatically, then use **Reboot app** to rebuild the environment.
 
 ## Project Layout
 
 ```text
 driver-fatigue-monitor/
-├── app.py                         # Application loop and dashboard
+├── app.py                         # Streamlit application and dashboard
 ├── requirements.txt               # Python dependencies
 ├── setup.sh                       # Environment setup helper
 ├── assets/
